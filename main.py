@@ -10,8 +10,9 @@
 #   Set up pipeline btwn CV algo and DB (be mindful of FireBase read/write limits)
 #   Frontend datadump set on timer?
 
-from flask import Flask, render_template, request
-import pyrebase
+from flask import Flask, render_template, request, jsonify
+import requests
+# import pyrebase
 
 # Basic FireBase Connection
 config = {
@@ -31,16 +32,40 @@ db = firebase.database()
 db.child("names").remove()
 
 # Basic Flask Template
+
+# run "set FLASK_APP=main.py" and then "flask run"
+
 app = Flask(__name__)
 
-@app.route('/')
-def index():
-    if request.method == 'POST':
-        pass
-    else:
-        pass
+example_data = {
+    'loc1': [
+        {
+            'name':'dallas',
+            'coords':'12345'
+        }
+    ]
+}
 
-    return "Hello, world!"
+data_json = json.dumps(example_data)
+
+@app.route('/hello', methods=['POST', 'GET'])
+def index():
+
+    # POST request
+    if request.method == 'POST':
+        print('Incoming...')
+        print(request.get_json())
+        return 'OK'
+
+    # GET request    
+    else:
+        message = {'greeting': 'Hello from Flask!'}
+        return jsonify(message)
+
+    
+# @app.route('/test')
+# def test_page():
+#     return render_template('index.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
