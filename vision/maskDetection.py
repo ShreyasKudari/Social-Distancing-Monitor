@@ -3,9 +3,12 @@ import argparse
 import time
 import cv2
 import os
+from threading import Thread
+import firebaseapi as fire
 
 
-def yolo(image, args):
+
+def yolo(image, args, latitude, longitude):
 		
 	(H, W) = image.shape[:2]
 
@@ -20,7 +23,7 @@ def yolo(image, args):
 	layerOutputs = net.forward(ln)
 	end = time.time()
 
-	print("[INFO] YOLO took {:.6f} seconds".format(end - start))
+	#print("[INFO] YOLO took {:.6f} seconds".format(end - start))
 
 	boxes = []
 	confidences = []
@@ -60,7 +63,8 @@ def yolo(image, args):
 	# boxes
 	idxs = cv2.dnn.NMSBoxes(boxes, confidences, args["confidence"],
 		args["threshold"])
-
+	subsum = 0
+	subtot = len(idxs)
 	# ensure at least one detection exists
 	if len(idxs) > 0:
 		# loop over the indexes we are keeping
@@ -75,22 +79,101 @@ def yolo(image, args):
 			text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
 			cv2.putText(image, text, (x, y+45), cv2.FONT_HERSHEY_SIMPLEX,
 				0.5, color, 2)
-
-	# show the output image
+			if classIDs[i] == 0:
+				subsum+=1
+	if subtot is not 0:
+		avg = int((subsum*100)/subtot)
+	else:
+		avg = -1
+	fire.update(latitude, longitude, avg)			
+	# return annotated image
 	return image
 
+def storeframe():
+	cap = cv2.VideoCapture(0)
+	if not cap.isOpened():
+		raise IOError("Webcam can't be opened")
+		
+	stat, storeimage = cap.read()
+	storecount = 0
+	while(stat==True):
+		framepath = os.path.sep.join([fifo,str(storecount)+".jpg"])
+		cv2.imwrite(framepath,storeimage)
+		stat, storeimage = cap.read()
+		storecount+=1
+		if storecount==200:
+			cap.release()
+			break
+
+def getframe():
+	getcount = 0
+	writer = None
+	while(True):
+		getpath = os.path.sep.join([fifo,str(getcount)+".jpg"])
+		if not os.path.exists(getpath):
+			continue
+
+		image = cv2.imread(getpath)
+		processed = yolo(image, args, latitude, longitude)
+		if writer is None:
+			fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+			writer = cv2.VideoWriter(args["output"],fourcc,30,
+			(processed.shape[1],processed.shape[0]),True)
+		writer.write(processed)
+		getcount+=1
+		if getcount==200:
+			break
+	writer.release()
+
+
+def videoparse():
+	vs = cv2.VideoCapture(args["input"])
+	writer = None
+	(W, H) = (None, None)
+	
+	while(True):
+		(grabbed, frame) = vs.read()
+		# if the frame was not grabbed, then we have reached the end
+		# of the stream
+		if not grabbed:
+			break
+		processed = yolo(frame, args, latitude, longitude)
+		if writer is None:
+			fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+			writer = cv2.VideoWriter(args["output"],fourcc,30,
+			(processed.shape[1],processed.shape[0]),True)
+		writer.write(processed)
+	writer.release()
+	vs.release()
+
+
+	
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image",
-	help="path to input image")
+ap.add_argument("-i", "--input",
+	help="path to input image/video")
 ap.add_argument("-y", "--yolo", required=True,
 	help="base path to YOLO directory")
-ap.add_argument("-c", "--confidence", type=float, default=0.1,
+ap.add_argument("-o", "--output",
+	help="base path to webcam output directory")
+ap.add_argument("-b", "--buffer", required=True,
+	help="path to fifo storage")
+ap.add_argument("-c", "--confidence", type=float, default=0.5,
 	help="minimum probability to filter weak detections")
 ap.add_argument("-t", "--threshold", type=float, default=0.3,
 	help="threshold when applying non-maxima suppression")
 ap.add_argument("-w", "--webcam", type=int, default=0,
 	help="enable webcam if no images")
+ap.add_argument("-l", "--lat", required=True, type=float,
+	help="camera latitude value")
+ap.add_argument("-g", "--lng", required=True,type=float,
+	help="camera longitude value")
 args = vars(ap.parse_args())
+
+#connect to firebase db
+fire.init()
+latitude = args["lat"]
+longitude = args["lng"]
+fire.newCamera(latitude, longitude, 0)
 
 #loading the label names : mask, no_mask
 labelsPath = os.path.sep.join([args["yolo"],"obj.names"])
@@ -110,28 +193,36 @@ configPath = os.path.sep.join([args["yolo"], "yolo-obj.cfg"])
 print("[INFO] loading YOLO from disk...")
 net = cv2.dnn_DetectionModel(configPath, weightsPath)
 
-if args["webcam"]==1:
-	cap = cv2.VideoCapture(0)
-	if not cap.isOpened():
-		raise IOError("Webcam can't be opened")	
-
-while(True):
+# if args["webcam"]==1:
+# 	cap = cv2.VideoCapture(0)
+# 	if not cap.isOpened():
+# 		raise IOError("Webcam can't be opened")
+# 	_, testim = cap.read()
+# 	cv2.imshow("testim",testim)
+# 	cv2.waitKey(0)
 # load our input image and grab its spatial dimensions
-	if args["webcam"]==1:
-		_, image = cap.read()
-	else:
-		image = cv2.imread(args["image"])
-
-	image = yolo(image, args)
+if args["webcam"]==1:
+	limit = 2000
+	fifo = args["buffer"]
+	threadgetter = Thread(target=getframe, args=())
+	threadgetter.start()
+	storeframe()
+	print("done getting webcam feed")
+	threadgetter.join()
+elif args["webcam"]==2:
+	videoparse()
+else:
+	image = cv2.imread(args["input"])
+	image = yolo(image, args, latitude, longitude)
 	# show the output image
 	cv2.imshow("Image", image)
-	if args["webcam"]!=1:
-		cv2.waitKey(0)
-		break
-	if cv2.waitKey(25)&0xFF == ord("q"):
-		cv2.destroyAllWindows()
-		cap.release
-		break
+if args["webcam"]!=1:
+	cv2.waitKey(0)
+# if cv2.waitKey(25)&0xFF == ord("q"):
+# 	cv2.destroyAllWindows()
+# 	cap.release
+# 	break
+#fire.removeCamera(latitude,longitude)
 
 
 
