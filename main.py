@@ -7,7 +7,7 @@
     SUMMARY
     > Contains functions for updating Firebase data with data generated from OpenCV Data
 
-    > Data currently stored as JSON: {"avgIndex": 0, "Location": "", "CamID": "", "lat": 0, "lng": 0, "Percentages": []}
+    > Data currently stored as JSON: {"avgIndex": 0, "lat": 0, "lng": 0}
         Note that some fields may currently be redundant and/or unecessary, need to determine use later
 
     Written by Austin Tsao
@@ -15,6 +15,7 @@
 """
 
 import pyrebase
+import random
 
 """
 Function: init
@@ -50,7 +51,7 @@ Updates index of camera at certain latitude and longitude in Firebase DB
 def update(lat, lng, index):
     data = db.get()
     for obj in data.each():
-        if lat == obj.val()['lat'] and lng == obj.val()['lng']:
+        if lat == obj.val().get('lat') and lng == obj.val().get('lng'):
             key = obj.key()
             db.child(key).update({"avgIndex": index})
 
@@ -62,10 +63,26 @@ Creates and initializes new camera location in Firebase DB
     lng: longitude coordinate of camera (float)
 @return: None
 """
-def newCamera(lat, lng):
-    data = {"avgIndex": 0, "Location": "", "CamID": "", "lat": lat, "lng": lng, "Percentages": []}
+def newCamera(lat, lng, index):
+    data = {"avgIndex": index, "lat": lat, "lng": lng}
     db.push(data)
 
+init()
+update(123.123, 123.123, 90)
+update(10, 10, 90)
+update(72.567, 90.349, 90)
+update(33.050974, -96.646829, 90)
+update(39.0392, 125.7625, 90)
+
+####### FUNCTION TO ADD RANDOM DISTRIBUTION OF COORDINATES/INDICES###########
+#for i in range(250):
+#    newCamera(random.uniform(-90,90), random.uniform(-180,180),random.randrange(0,100,1))
+
+# update(10, 10, 60)
+# update(123.123, 123.123, 85)
+# update(72.567, 90.349, 90)
+# db.child("data").update({"text": "Blahblahblah"})
+# update(32.7767, -96.7970, 99)
 
 #################### MISC NOTES AND TESTING ####################
 # Core Functionalities
