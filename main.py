@@ -67,14 +67,11 @@ def newCamera(lat, lng, index):
     data = {"avgIndex": index, "lat": lat, "lng": lng}
     db.push(data)
 
-init()
-update(123.123, 123.123, 90)
-update(10, 10, 90)
-update(72.567, 90.349, 90)
-update(33.050974, -96.646829, 90)
-update(39.0392, 125.7625, 90)
+######################### IGNORE BELOW THIS LINE #######################################
 
-####### FUNCTION TO ADD RANDOM DISTRIBUTION OF COORDINATES/INDICES###########
+
+
+####### FUNCTION TO ADD RANDOM DISTRIBUTION OF COORDINATES/INDICES ###########
 #for i in range(250):
 #    newCamera(random.uniform(-90,90), random.uniform(-180,180),random.randrange(0,100,1))
 
@@ -97,43 +94,4 @@ update(39.0392, 125.7625, 90)
 #   Set up pipeline btwn CV algo and DB (be mindful of FireBase read/write limits)
 #   Frontend datadump set on timer?
 # from flask import Flask, render_template, request
-
-#init()
-#newCamera(100, 300)
-#update(-40.39492, 120.21345, 100)
-
-
-
-'''
-for obj in data.each():
-    print(obj.val()['lat'])
-    if -31.56391 == obj.val()['lat'] and 147.154312 == obj.val()['lng']:
-        print(obj.key())
-        key = obj.key()
-        db.child(key).update({"avgIndex": 9000})
-
-print(data.val())
-
-#dataInput = {"avgIndex": 45, "Location": "Dallas", "CamID": "D31", "lat": -31.563910, "lng": 147.154312, "Percentages": [25,35,23,72,45]}
-#dataInput2 = {"avgIndex": 90, "Location": "Fort Worth", "CamID": "F25", "lat": -40.39492, "lng": 120.21345, "Percentages": [80,30,43,23,44]}
-#db.push(dataInput2)
-#db.push(dataInput)
-'''
-
-'''
-# Basic Flask Template
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    if request.method == 'POST':
-        pass
-    else:
-        pass
-
-    return "Hello, world!"
-
-if __name__ == "__main__":
-    app.run(debug=True)
-'''
 
