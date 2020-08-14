@@ -4,6 +4,9 @@ import time
 import cv2
 import os
 from threading import Thread
+import firebaseapi as fire
+
+
 
 def yolo(image, args):
 		
@@ -60,7 +63,8 @@ def yolo(image, args):
 	# boxes
 	idxs = cv2.dnn.NMSBoxes(boxes, confidences, args["confidence"],
 		args["threshold"])
-
+	subsum = 0
+	subtot = len(idxs)
 	# ensure at least one detection exists
 	if len(idxs) > 0:
 		# loop over the indexes we are keeping
@@ -75,8 +79,11 @@ def yolo(image, args):
 			text = "{}: {:.4f}".format(LABELS[classIDs[i]], confidences[i])
 			cv2.putText(image, text, (x, y+45), cv2.FONT_HERSHEY_SIMPLEX,
 				0.5, color, 2)
-
-	# show the output image
+			if classIDs[i] == 0:
+				subsum+=1
+	avg = int((subsum*100)/subtot)
+	fire.update(latitude,longitude,avg)			
+	# return annotated image
 	return image
 
 def storeframe():
@@ -85,26 +92,21 @@ def storeframe():
 		raise IOError("Webcam can't be opened")
 		
 	stat, storeimage = cap.read()
-	count = 0
+	storecount = 0
 	while(stat==True):
-		framepath = os.path.sep.join([fifo,str(count)+".jpg"])
+		framepath = os.path.sep.join([fifo,str(storecount)+".jpg"])
 		cv2.imwrite(framepath,storeimage)
 		stat, storeimage = cap.read()
-		count+=1
-		if count==200:
+		storecount+=1
+		if storecount==200:
 			cap.release()
 			break
 
 def getframe():
-	count = 0
+	getcount = 0
 	writer = None
-	'''
-	read a frame from fifo 
-	forward pass into yolo(which also updates firebase)
-	append returned image to output file
-	'''
 	while(True):
-		getpath = os.path.sep.join([fifo,str(count)+".jpg"])
+		getpath = os.path.sep.join([fifo,str(getcount)+".jpg"])
 		if not os.path.exists(getpath):
 			continue
 		image = cv2.imread(getpath)
@@ -114,8 +116,8 @@ def getframe():
 			writer = cv2.VideoWriter(args["output"],fourcc,30,
 			(processed.shape[1],processed.shape[0]),True)
 		writer.write(processed)
-		count+=1
-		if count==200:
+		getcount+=1
+		if getcount==200:
 			break
 	
 ap = argparse.ArgumentParser()
@@ -123,7 +125,7 @@ ap.add_argument("-i", "--image",
 	help="path to input image")
 ap.add_argument("-y", "--yolo", required=True,
 	help="base path to YOLO directory")
-ap.add_argument("-o", "--output", required=True,
+ap.add_argument("-o", "--output",
 	help="base path to webcam output directory")
 ap.add_argument("-b", "--buffer", required=True,
 	help="path to fifo storage")
@@ -133,10 +135,18 @@ ap.add_argument("-t", "--threshold", type=float, default=0.3,
 	help="threshold when applying non-maxima suppression")
 ap.add_argument("-w", "--webcam", type=int, default=0,
 	help="enable webcam if no images")
+ap.add_argument("-l", "--lat", required=True,type=float,
+	help="camera latitude value")
+ap.add_argument("-g", "--lng", required=True,type=float,
+	help="camera longitude value")
 args = vars(ap.parse_args())
 
+#connect to firebase db
+fire.init()
+latitude = args["lat"]
+longitude = args["lng"]
+fire.newCamera(latitude, longitude, 0)
 
-fifo = args["buffer"]
 #loading the label names : mask, no_mask
 labelsPath = os.path.sep.join([args["yolo"],"obj.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
@@ -165,9 +175,11 @@ net = cv2.dnn_DetectionModel(configPath, weightsPath)
 # load our input image and grab its spatial dimensions
 if args["webcam"]==1:
 	limit = 2000
+	fifo = args["buffer"]
 	threadgetter = Thread(target=getframe, args=())
 	threadgetter.start()
 	storeframe()
+	print("done getting webcam feed")
 	threadgetter.join()
 else:
 	image = cv2.imread(args["image"])
@@ -180,6 +192,7 @@ if args["webcam"]!=1:
 # 	cv2.destroyAllWindows()
 # 	cap.release
 # 	break
+#fire.removeCamera(latitude,longitude)
 
 
 

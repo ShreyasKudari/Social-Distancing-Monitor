@@ -74,7 +74,7 @@ def removeCamera(lat, lng):
 
 if __name__ == "__main__":
     init()
-    newCamera(12,23,34)
+    removeCamera(7650,8790)
     
     
 ######################### IGNORE BELOW THIS LINE #######################################
