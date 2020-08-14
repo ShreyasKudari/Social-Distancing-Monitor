@@ -1,28 +1,28 @@
-"""
-    OpenCV to Firebase Library
+# """
+# OpenCV to Firebase Library
 
-    Requires: pyrebase
-    @user$ "pip(3) install pyrebase"
+# Requires: pyrebase
+# @user$ "pip(3) install pyrebase"
 
-    SUMMARY
-    > Contains functions for updating Firebase data with data generated from OpenCV Data
+# SUMMARY
+# > Contains functions for updating Firebase data with data generated from OpenCV Data
 
-    > Data currently stored as JSON: {"avgIndex": 0, "lat": 0, "lng": 0}
-        Note that some fields may currently be redundant and/or unecessary, need to determine use later
+# > Data currently stored as JSON: {"avgIndex": 0, "lat": 0, "lng": 0}
+#     Note that some fields may currently be redundant and/or unecessary, need to determine use later
 
-    Written by Austin Tsao
-    August 12, 2020
-"""
+# Written by Austin Tsao
+# August 12, 2020
+# """
 
 import pyrebase
 import random
 
-"""
-Function: init
-Initializes connection to Firebase
-@param: None
-@return: None
-"""
+# """
+# Function: init
+# Initializes connection to Firebase
+# @param: None
+# @return: None
+# """
 def init():
     config = {
         "apiKey": "AIzaSyAf58ybK5T7_dZr10b4tum-XAu3aqu1v_Q",
@@ -39,34 +39,44 @@ def init():
     global db
     db = firebase.database()
 
-"""
-Function: update
-Updates index of camera at certain latitude and longitude in Firebase DB
-@param
-    lat: Latitude coordinate of camera (float)
-    lng: longitude coordinate of camera (float)
-    index: Calculated index of mask-wearing individuals (int)
-@return: None
-"""
+# """
+# Function: update
+# Updates index of camera at certain latitude and longitude in Firebase DB
+# @param
+#     lat: Latitude coordinate of camera (float)
+#     lng: longitude coordinate of camera (float)
+#     index: Calculated index of mask-wearing individuals (int)
+# @return: None
+# """
 def update(lat, lng, index):
-    data = db.get()
-    for obj in data.each():
-        if lat == obj.val().get('lat') and lng == obj.val().get('lng'):
-            key = obj.key()
-            db.child(key).update({"avgIndex": index})
+    db.child(''.join(str(lat).split('.')+str(lng).split('.'))).update({"avgIndex": index})
 
-"""
-Function: newCamera
-Creates and initializes new camera location in Firebase DB
-@param
-    lat: Latitude coordinate of camera (float)
-    lng: longitude coordinate of camera (float)
-@return: None
-"""
+# """
+#     Function: newCamera
+#     Creates and initializes new camera location in Firebase DB
+#     @param
+#         lat: Latitude coordinate of camera (float)
+#         lng: longitude coordinate of camera (float)
+#         index: the calculated percentage (int)
+#     @return: None
+# """
 def newCamera(lat, lng, index):
     data = {"avgIndex": index, "lat": lat, "lng": lng}
-    db.push(data)
+    db.child(''.join(str(lat).split('.')+str(lng).split('.'))).set(data)
 
+# """
+#     Function: remove
+#     Removes the camera from db listing
+# """
+def removeCamera(lat, lng):
+    db.child(''.join(str(lat).split('.')+str(lng).split('.'))).remove()
+
+
+if __name__ == "__main__":
+    init()
+    newCamera(12,23,34)
+    
+    
 ######################### IGNORE BELOW THIS LINE #######################################
 
 
