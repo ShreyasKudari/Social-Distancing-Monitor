@@ -17,6 +17,8 @@
 import pyrebase
 import random
 
+from math import log10
+__base32 = '0123456789bcdefghjkmnpqrstuvwxyz'
 # """
 # Function: init
 # Initializes connection to Firebase
@@ -64,6 +66,7 @@ def newCamera(lat, lng, index):
     data = {"avgIndex": index, "lat": lat, "lng": lng}
     db.child(''.join(str(lat).split('.')+str(lng).split('.'))).set(data)
 
+
 # """
 #     Function: remove
 #     Removes the camera from db listing
@@ -71,11 +74,6 @@ def newCamera(lat, lng, index):
 def removeCamera(lat, lng):
     db.child(''.join(str(lat).split('.')+str(lng).split('.'))).remove()
 
-
-if __name__ == "__main__":
-    init()
-    removeCamera(7650,8790)
-    
     
 ######################### IGNORE BELOW THIS LINE #######################################
 

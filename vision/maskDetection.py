@@ -8,7 +8,7 @@ import firebaseapi as fire
 
 
 
-def yolo(image, args):
+def yolo(image, args, latitude, longitude):
 		
 	(H, W) = image.shape[:2]
 
@@ -81,8 +81,11 @@ def yolo(image, args):
 				0.5, color, 2)
 			if classIDs[i] == 0:
 				subsum+=1
-	avg = int((subsum*100)/subtot)
-	fire.update(latitude,longitude,avg)			
+	if subtot is not 0:
+		avg = int((subsum*100)/subtot)
+	else:
+		avg = -1
+	fire.update(latitude, longitude, avg)			
 	# return annotated image
 	return image
 
@@ -109,8 +112,9 @@ def getframe():
 		getpath = os.path.sep.join([fifo,str(getcount)+".jpg"])
 		if not os.path.exists(getpath):
 			continue
+
 		image = cv2.imread(getpath)
-		processed = yolo(image, args)
+		processed = yolo(image, args, latitude, longitude)
 		if writer is None:
 			fourcc = cv2.VideoWriter_fourcc(*"MJPG")
 			writer = cv2.VideoWriter(args["output"],fourcc,30,
@@ -119,10 +123,34 @@ def getframe():
 		getcount+=1
 		if getcount==200:
 			break
+	writer.release()
+
+
+def videoparse():
+	vs = cv2.VideoCapture(args["input"])
+	writer = None
+	(W, H) = (None, None)
+	
+	while(True):
+		(grabbed, frame) = vs.read()
+		# if the frame was not grabbed, then we have reached the end
+		# of the stream
+		if not grabbed:
+			break
+		processed = yolo(frame, args, latitude, longitude)
+		if writer is None:
+			fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+			writer = cv2.VideoWriter(args["output"],fourcc,30,
+			(processed.shape[1],processed.shape[0]),True)
+		writer.write(processed)
+	writer.release()
+	vs.release()
+
+
 	
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image",
-	help="path to input image")
+ap.add_argument("-i", "--input",
+	help="path to input image/video")
 ap.add_argument("-y", "--yolo", required=True,
 	help="base path to YOLO directory")
 ap.add_argument("-o", "--output",
@@ -135,7 +163,7 @@ ap.add_argument("-t", "--threshold", type=float, default=0.3,
 	help="threshold when applying non-maxima suppression")
 ap.add_argument("-w", "--webcam", type=int, default=0,
 	help="enable webcam if no images")
-ap.add_argument("-l", "--lat", required=True,type=float,
+ap.add_argument("-l", "--lat", required=True, type=float,
 	help="camera latitude value")
 ap.add_argument("-g", "--lng", required=True,type=float,
 	help="camera longitude value")
@@ -181,9 +209,11 @@ if args["webcam"]==1:
 	storeframe()
 	print("done getting webcam feed")
 	threadgetter.join()
+elif args["webcam"]==2:
+	videoparse()
 else:
-	image = cv2.imread(args["image"])
-	image = yolo(image, args)
+	image = cv2.imread(args["input"])
+	image = yolo(image, args, latitude, longitude)
 	# show the output image
 	cv2.imshow("Image", image)
 if args["webcam"]!=1:
