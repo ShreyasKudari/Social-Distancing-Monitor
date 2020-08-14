@@ -3,7 +3,7 @@ import argparse
 import time
 import cv2
 import os
-
+from threading import Thread
 
 def yolo(image, args):
 		
@@ -20,7 +20,7 @@ def yolo(image, args):
 	layerOutputs = net.forward(ln)
 	end = time.time()
 
-	print("[INFO] YOLO took {:.6f} seconds".format(end - start))
+	#print("[INFO] YOLO took {:.6f} seconds".format(end - start))
 
 	boxes = []
 	confidences = []
@@ -79,12 +79,55 @@ def yolo(image, args):
 	# show the output image
 	return image
 
+def storeframe():
+	cap = cv2.VideoCapture(0)
+	if not cap.isOpened():
+		raise IOError("Webcam can't be opened")
+		
+	stat, storeimage = cap.read()
+	count = 0
+	while(stat==True):
+		framepath = os.path.sep.join([fifo,str(count)+".jpg"])
+		cv2.imwrite(framepath,storeimage)
+		stat, storeimage = cap.read()
+		count+=1
+		if count==200:
+			cap.release()
+			break
+
+def getframe():
+	count = 0
+	writer = None
+	'''
+	read a frame from fifo 
+	forward pass into yolo(which also updates firebase)
+	append returned image to output file
+	'''
+	while(True):
+		getpath = os.path.sep.join([fifo,str(count)+".jpg"])
+		if not os.path.exists(getpath):
+			continue
+		image = cv2.imread(getpath)
+		processed = yolo(image, args)
+		if writer is None:
+			fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+			writer = cv2.VideoWriter(args["output"],fourcc,30,
+			(processed.shape[1],processed.shape[0]),True)
+		writer.write(processed)
+		count+=1
+		if count==200:
+			break
+	
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image",
 	help="path to input image")
 ap.add_argument("-y", "--yolo", required=True,
 	help="base path to YOLO directory")
-ap.add_argument("-c", "--confidence", type=float, default=0.1,
+ap.add_argument("-o", "--output", required=True,
+	help="base path to webcam output directory")
+ap.add_argument("-b", "--buffer", required=True,
+	help="path to fifo storage")
+ap.add_argument("-c", "--confidence", type=float, default=0.5,
 	help="minimum probability to filter weak detections")
 ap.add_argument("-t", "--threshold", type=float, default=0.3,
 	help="threshold when applying non-maxima suppression")
@@ -92,6 +135,8 @@ ap.add_argument("-w", "--webcam", type=int, default=0,
 	help="enable webcam if no images")
 args = vars(ap.parse_args())
 
+
+fifo = args["buffer"]
 #loading the label names : mask, no_mask
 labelsPath = os.path.sep.join([args["yolo"],"obj.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
@@ -110,28 +155,31 @@ configPath = os.path.sep.join([args["yolo"], "yolo-obj.cfg"])
 print("[INFO] loading YOLO from disk...")
 net = cv2.dnn_DetectionModel(configPath, weightsPath)
 
-if args["webcam"]==1:
-	cap = cv2.VideoCapture(0)
-	if not cap.isOpened():
-		raise IOError("Webcam can't be opened")	
-
-while(True):
+# if args["webcam"]==1:
+# 	cap = cv2.VideoCapture(0)
+# 	if not cap.isOpened():
+# 		raise IOError("Webcam can't be opened")
+# 	_, testim = cap.read()
+# 	cv2.imshow("testim",testim)
+# 	cv2.waitKey(0)
 # load our input image and grab its spatial dimensions
-	if args["webcam"]==1:
-		_, image = cap.read()
-	else:
-		image = cv2.imread(args["image"])
-
+if args["webcam"]==1:
+	limit = 2000
+	threadgetter = Thread(target=getframe, args=())
+	threadgetter.start()
+	storeframe()
+	threadgetter.join()
+else:
+	image = cv2.imread(args["image"])
 	image = yolo(image, args)
 	# show the output image
 	cv2.imshow("Image", image)
-	if args["webcam"]!=1:
-		cv2.waitKey(0)
-		break
-	if cv2.waitKey(25)&0xFF == ord("q"):
-		cv2.destroyAllWindows()
-		cap.release
-		break
+if args["webcam"]!=1:
+	cv2.waitKey(0)
+# if cv2.waitKey(25)&0xFF == ord("q"):
+# 	cv2.destroyAllWindows()
+# 	cap.release
+# 	break
 
 
 
