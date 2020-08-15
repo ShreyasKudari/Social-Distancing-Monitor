@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="Michelle Wen">
+    <meta name="generator" content="Jekyll v4.1.1">
+    <title>MaskIndex</title>
+    <!-- <link href="css/bootstrap.min.css" rel="stylesheet"> -->
+    <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/cover/">
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        .bd-placeholder-img {
+            font-size: 1.125rem;
+            text-anchor: middle;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        @media (min-width: 768px) {
+            .bd-placeholder-img-lg {
+                font-size: 3.5rem;
+            }
+        }
+
+        #map{
+            height:400px;
+            width:100%;
+        }
+    </style>
+
+    <!-- Custom styles for this template -->
+    <link href="cover.css" rel="stylesheet">
+</head>
+
+<body class="text-center">
+    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
+        <header class="masthead mb-auto">
+            <div class="inner">
+                <h1 class="masthead-brand">MaskIndex</h1>
+                <nav class="nav nav-masthead justify-content-center">
+                    <a class="nav-link" href="index.html">Home</a>
+                    <a class="nav-link active" href="#">Map</a>
+                    <a class="nav-link" href="projectinfo.html">How We Did It</a>
+                </nav>
+            </div>
+        </header>
+
+        <main role="main" class="inner cover">
+            <h1 class="cover-heading">Real-Time Map of Mask-Wearers</h1>
+            <hr>
+            <div id="map"></div>
+            <hr>
+            <p class="lead">Click on a location to see what cameras have discovered. Find out what percentage of people wear masks. Determine if the location you are seeking is COVID-safe.</p>
+            <p class="lead">Red zones = less mask wearers. Green zones = more mask wearers.</p>
+            <!-- <p class="lead">
+                <a href="#" class="btn btn-lg btn-secondary">Learn more</a>
+            </p> -->
+        </main>
+
+        <footer class="mastfoot mt-auto">
+            <div class="inner">
+                <p>MaskIndex Project for SummerHacks 2020. <a href="https://github.com/michellewen3/Social-Distancing-Monitor">Github</a>.</p>
+            </div>
+        </footer>
+    </div>
+
+    
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase-messaging.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.0.1/firebase-functions.js"></script>
+    <script src="map.js"></script>
+    <script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJjIxlZmJNH3hzWnWPHOLlTYSXGOL5GFo&callback=initMap">
+    </script>
+    <script src="https://unpkg.com/@google/markerclustererplus@4.0.1/dist/markerclustererplus.min.js"></script>
+    <!-- <script src="http://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+    <script src="markerclusterer.js" type="text/javascript"></script> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+</body>
+</html>
+
