@@ -7,7 +7,7 @@
     <meta name="description" content="">
     <meta name="author" content="Michelle Wen">
     <meta name="generator" content="Jekyll v4.1.1">
-    <title>Social Distancing Monitor</title>
+    <title>MaskIndex</title>
     <!-- <link href="css/bootstrap.min.css" rel="stylesheet"> -->
     <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/cover/">
 
@@ -37,18 +37,29 @@
     <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
   <header class="masthead mb-auto">
     <div class="inner">
-      <h3 class="masthead-brand">Social Distancing Monitor</h3>
+      <h1 class="masthead-brand">MaskIndex</h1>
       <nav class="nav nav-masthead justify-content-center">
-        <a class="nav-link active" href="index.html">Home</a>
+        <a class="nav-link" href="index.html">Home</a>
         <a class="nav-link" href="map.html">Map</a>
-        <a class="nav-link" href="#">How We Did It</a>
+        <a class="nav-link active" href="#">How We Did It</a>
       </nav>
     </div>
   </header>
 
   <main role="main" class="inner cover">
-    <h1 class="cover-heading">Implementation... blah blah</h1>
-    <p class="lead">Using Computer Vision and ... tools, we have gathered the percentage of mask wearers in locations.. blah blah</p>
+    <h1 class="cover-heading">Our Implementation</h1>
+    <hr>
+    <p class="lead">
+      Starting with this website, we created a simple Graphical User Interface for users to iteract with a real-time map that displays the percentage of mask-wearers in a certain area.
+      The highlighted circles on the map means there is a working camera at the location that is extracting live data. The circle color shows the average percentage of mask wearers 
+      (red = <25%, orange = 25% to 50%, yellow = 50% to 75%, green = >75%). 
+    </p>
+    <hr>
+    <p class="lead">Data is initially collected through live camera feeds and processed with our Computer Vision algorithm using OpenCV. </p> 
+    <p class="lead">Then, an average is calculated of all the mask-wearers at the camera's location. </p>
+    <p class="lead">This data is uploaded to the Google Firebase Realtime Database. 
+    <p class="lead">Finally, this website automatically pulls that data from the database and integrates it with the Google Maps Javascript API, where it is finally displayed on the map. </p>
+    <hr>
     <p class="lead">
       <a href="https://github.com/michellewen3/Social-Distancing-Monitor" class="btn btn-lg btn-secondary">Go to Github</a>
     </p>
@@ -56,7 +67,7 @@
 
   <footer class="mastfoot mt-auto">
     <div class="inner">
-      <p>Social-Distancing-Monitor Project for SummerHacks 2020. <a href="https://github.com/michellewen3/Social-Distancing-Monitor">Github</a>.</p>
+      <p>MaskIndex Project for SummerHacks 2020. <a href="https://github.com/michellewen3/Social-Distancing-Monitor">Github</a>.</p>
     </div>
   </footer>
 </div>

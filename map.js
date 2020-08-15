@@ -147,10 +147,18 @@ function addMarker(props){
 
     updateColor(props, marker);
 
+    var infoWindow;
     // add info window
-    var infoWindow = new google.maps.InfoWindow({
-        content: `<h8 style="color:black">${props.avgIndex}% mask-wearers in this area</h8>`
-    });
+    // if(props.avgIndex === -1){
+    //     infoWindow = new google.maps.InfoWindow({
+    //         content: '<h8 style="color:black">No data yet</h8>'
+    //     });
+    // }
+    // else{
+        infoWindow = new google.maps.InfoWindow({
+            content: `<h8 style="color:black">${props.avgIndex}% mask-wearers in this area</h8>`
+        });
+    // }
 
     marker.addListener('click', function(){
         infoWindow.open(map, marker);
@@ -166,6 +174,8 @@ function updateMarker(newMarker){
         var m = markers[i];
         if (m.getPosition().lat() === newMarker.lat && m.getPosition().lng() === newMarker.lng) {
             updateColor(newMarker, m);
+
+
         }
     }
 
@@ -175,7 +185,11 @@ function updateColor(newMarker, m){
     var mag = newMarker.avgIndex;
     var cFill;
     var cStroke;
-    if(mag < 25){ 
+    if(mag === -1){
+        cFill = "#A9A9A9"
+        cStroke = "#A9A9A9"
+    }
+    else if(mag < 25){ 
         cFill = "#FF0000"
         cStroke = "#FF0000"
     }
