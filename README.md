@@ -1,5 +1,5 @@
 # Mask-Index
-** A simple yet effective monitor to keep our community informed about percentage mask usage in public spaces.**
+**A simple yet effective monitor to keep our community informed about percentage mask usage in public spaces.**
 Fighting SARS-COVID-19 will need all of us to act responsibly, to keep ourselves, and the people around us safe.
 
 With the help of computer vision and artificial intelligence, our solution lets people visualize how well citizens 
