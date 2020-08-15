@@ -6,7 +6,7 @@ With the help of computer vision and artificial intelligence, our solution lets 
 are conforming to mask guidelines. Our website displays a series of cameras on a map which is updated real time about
 the mask usage stats from the respective AI algorithms running on the camera systems.
 
-<Link to website here>
+https://michellewen3.github.io/Social-Distancing-Monitor/
 
 #Software and tools
 Machine Learning and Computer Vision: OpenCV, DarkNet Neural Network, Google Colab
