@@ -5,7 +5,7 @@ import cv2
 import os
 from threading import Thread
 import firebaseapi as fire
-
+import time
 
 
 def yolo(image, args, latitude, longitude):
@@ -101,19 +101,21 @@ def storeframe():
 		cv2.imwrite(framepath,storeimage)
 		stat, storeimage = cap.read()
 		storecount+=1
-		if storecount==200:
+		if storecount==limit:
 			cap.release()
 			break
 
 def getframe():
 	getcount = 0
 	writer = None
+	time.sleep(3)
 	while(True):
 		getpath = os.path.sep.join([fifo,str(getcount)+".jpg"])
 		if not os.path.exists(getpath):
 			continue
-
 		image = cv2.imread(getpath)
+		if image is None:
+			continue
 		processed = yolo(image, args, latitude, longitude)
 		if writer is None:
 			fourcc = cv2.VideoWriter_fourcc(*"MJPG")
@@ -121,7 +123,7 @@ def getframe():
 			(processed.shape[1],processed.shape[0]),True)
 		writer.write(processed)
 		getcount+=1
-		if getcount==200:
+		if getcount==limit:
 			break
 	writer.release()
 
@@ -167,6 +169,8 @@ ap.add_argument("-l", "--lat", required=True, type=float,
 	help="camera latitude value")
 ap.add_argument("-g", "--lng", required=True,type=float,
 	help="camera longitude value")
+ap.add_argument("-e","--end",type=int,default=200,
+	help="upper bound for frames")
 args = vars(ap.parse_args())
 
 #connect to firebase db
@@ -174,7 +178,7 @@ fire.init()
 latitude = args["lat"]
 longitude = args["lng"]
 fire.newCamera(latitude, longitude, 0)
-
+limit = args["end"]
 #loading the label names : mask, no_mask
 labelsPath = os.path.sep.join([args["yolo"],"obj.names"])
 LABELS = open(labelsPath).read().strip().split("\n")
@@ -202,7 +206,7 @@ net = cv2.dnn_DetectionModel(configPath, weightsPath)
 # 	cv2.waitKey(0)
 # load our input image and grab its spatial dimensions
 if args["webcam"]==1:
-	limit = 2000
+
 	fifo = args["buffer"]
 	threadgetter = Thread(target=getframe, args=())
 	threadgetter.start()
